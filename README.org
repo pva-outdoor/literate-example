@@ -113,7 +113,7 @@ like in the previous example:
 ----------------------------------------
 
 Our job is to get some useful information based on database name.
-Doing the job the program connect to database and gets all needed
+Doing the job the program connects to database and gets all needed
 data.
 
 #+begin_src c
@@ -127,7 +127,7 @@ data.
 #+end_src
 
 There are 3 attempts to connect to the database. In case of failure
-the program warns user of failure and does not do the job.
+the program warns user about the failure and does not do the job.
 
 #+begin_src c
   bool is_connected = false;
@@ -152,14 +152,14 @@ description what happened from the operating system.
 
 From now we can:
 
-- check of description matches implementation and fix either thing.
+- check that description matches implementation and fix either thing.
 
 - strip out code and give this description to someone who can't (or
   should not) read out code. Here how it looks from the example:
 
   #+begin_quote
   Our job is to get some useful information based on database name.
-  Doing the job the program connect to database and gets all needed
+  Doing the job the program connects to database and gets all needed
   data. There are 3 attempts to connect to the database. In case of
   failure the program warns user of failure and does not do the
   job. The warning message is printed to standard output and contains
@@ -169,7 +169,7 @@ From now we can:
 If we provide each phrase with hyperlink to source code we will be
 able talking about our implementation with people who can not read our
 code. Tester can tell which part of executable does not match the
-description and we can quickly find the peas of code what she is
+description and we can quickly find the piece of code what she is
 talking about. Product manager can tell where her understanding of our
 program does not match the implementation (more precisely our
 understanding of the program). Documenter can alter phrases from clear
@@ -186,8 +186,8 @@ found in your code (your code become a set of snippets).
 
 Here you can see and example of Literate Programming code: https://github.com/pva-outdoor/literate-example
 I beg pardon of users who don't speak Russian. I just had no time
-for translating it it English (but you can use the power of ChatGPT2
-for translating the documentation in the language you want).
+for translating it in English (but you can use the power of ChatGPT2
+for translating the documentation to the language you want).
 
 The obvious drawbacks of the approach you may see are:
 
@@ -205,9 +205,9 @@ The obvious drawbacks of the approach you may see are:
 
 * Back to code
 
-These issues can be resolve with going back to programming language
-code. If we put our literator part into some special comments we can
-ship our already well-formatted code with extra information. I will be
+These issues can be resolved with going back to programming language
+code. If we put our literate parts into some special comments we can
+ship our already well-formatted code with extra information. It will be
 both readable to developers and coupled with information for others.
 
 Back to our example:
@@ -215,7 +215,7 @@ Back to our example:
 #+begin_src c
   /*i	
 	Our job is to get some useful information based on database name.
-	Doing the job the program connect to database and gets all needed
+	Doing the job the program connects to database and gets all needed
 	data. */
 
   struct do_our_job
@@ -244,7 +244,7 @@ Back to our example:
 
   /*i
 	There are 3 attempts to connect to the database. In case of failure
-	the program warns user of failure and does not do the job. */
+	the program warns user about failure and does not do the job. */
 
   bool connect_to_database(struct do_our_job *x)
 	{
@@ -298,13 +298,13 @@ The presented approach has cons and pros. Pros:
 - You can save your current workflow. You are just to add comments in
   your code. No special tools required for this.
 
-- While adding documentation to exiting code you are reviewing your
+- While adding documentation to existing code you are reviewing your
   code with eyes of the program user. You can find out how it is
   comfortable to use or understand your product. Sometimes it is
   helpful to describe your code with someone else. For example once I
   wrote the following thing: "All files and directories in the
   directory containing dots in their names are examined to..." and
-  got that "*.*" was not that the author wanted to say.
+  got that "*​.*" was not that the author wanted to say.
 
 - You may find pieces of your code that need to be refactored. For
   example I spent almost 50% time to refactoring my code at the first
