@@ -1,0 +1,391 @@
+#+TITLE: Literate Programming Example
+#+AUTHOR: Andrey Petrov
+#+LANGUAGE: en
+#+options: ^:{}
+
+This is an example of using Literate Programming approach in coding.
+
+Often software developers say that their code is self-documented and
+does not need an explanation. I see some problems here.
+
+- OK, the code may be clear for it's authors because they was working
+  a lot of time on their projects and have some subset of language in
+  their head. I mean that they used to apply some special coding
+  style, a library/functions set and so on. For that reason when such
+  people sees other isolated team's code they may say that other's
+  code is not as clear as their's one.
+
+- Suppose you have a high quality self-documented code. Can you tell
+  other people (who may not know your style, programming language,
+  etc. like your product manager or even stakeholder) how your
+  program works? You have to translate your code back to human
+  language each time, for each question of your team mate.
+
+- Can you answer looking on pretty formatted code how the program
+  SHOULD work? Suppose you are showing your program to testers or
+  professional documeters. You can tell how your program works but can
+  you give 100% guaratee that it contains no bugs and does exactly
+  that it should? Even very adult projects has bugs.
+
+* The idea of Literate Programming
+
+Well famous person in programming, Donald Knuth, introduced an
+approach called Literate Programming. It allows explaining code in
+language very close to natural. Here I will not use the original
+approach but rather some peudocode. We can write out program some way
+like this (note that this is a short example with many things
+omitted):
+
+----------------------------------------
+
+**Do some query**
+
+To do our job we need to initialize database access and connect to
+database. After that we ... (here goes explanation of code in human
+laguage).
+
+Procedure arguments: /database/ - the name of database to connect.
+
+Returns: one of the following values: ... 
+
+#+begin_src c
+  int do_our_job(const char *database)
+  {
+	<<Initialize database access>>
+	<<Connect to databse or return>>
+
+	/* code is ommited here */
+
+	return 0;
+  }
+#+end_src
+
+**Connect to databse or return**
+
+We keep information on connection status in ~is_connected~ variable
+and track number of connection attempts in ~is_connected~. On the
+third attempt we notify user of connection failure and exit.
+
+#+begin_src c
+  bool is_connected = false;
+  for (int try_number = 0; !is_connected; ++try_number)
+	{
+	  if (3 == try_number)
+		{
+		  <<Warn user of failure>>
+		  return -1;
+		}
+	}
+#+end_src
+
+**Warn user of failure**
+
+We just print error message with operating systems's last error
+description on standard output.
+
+#+begin_src c
+  warn("Cannot connect to `%s'", database);
+#+end_src
+
+----------------------------------------
+
+Here we pedantically explain what our code do and this information
+could be useful for developers who are not familiar with our
+libraries, coding style or programming language. They even can learn
+our stuff with this desciption. But where we have some drawbacks:
+
+- He already had well-formatted code, descriptive information is not
+  very pleasant for us.
+
+- Natural language takes same amount of text (or even more sometimes)
+  and duplicates our code.
+
+- The added information is not for out project manager / tester /
+  stakeholder.
+
+* Reinventing the wheel
+
+Instead of teaching someone to read our code we can explain what our
+code supposed to do in aspects of end user information. Doing that we
+are adding but not duplicatin information. Lets see how it may look
+like in the previous example:
+
+----------------------------------------
+
+Our job is to get some useful information based on database name.
+Doing the job the program connect to database and gets all needed
+data.
+
+#+begin_src c
+  int do_our_job(const char *database)
+  {
+	<<Initialize database access>>
+	<<Connect to databse or return>>
+
+	/* code is ommited here */
+  }
+#+end_src
+
+There are 3 attempts to connect to the database. In case of failure
+the program warns user of failure and does not do the job.
+
+#+begin_src c
+  bool is_connected = false;
+  for (int try_number = 0; !is_connected; ++try_number)
+	{
+	  if (3 == try_number)
+		{
+		  <<Warn user of failure>>
+		  return -1;
+		}
+	}
+#+end_src
+
+Whe warnnig message is printed to standard output and contains the
+description what happened from the operating system.
+
+#+begin_src c
+  warn("Cannot connect to `%s'", database);
+#+end_src
+
+----------------------------------------
+
+From now we can:
+
+- check of description matches implementation and fix either thing.
+
+- strip out code and give this description to someone who can't (or
+  should not) read out code. Here how it looks from the example:
+
+  #+begin_quote
+  Our job is to get some useful information based on database name.
+  Doing the job the program connect to database and gets all needed
+  data. There are 3 attempts to connect to the database. In case of
+  failure the program warns user of failure and does not do the
+  job. Whe warnnig message is printed to standard output and contains
+  the description what happened from the operating system.
+  #+end_quote
+
+If we provide each phrase with hyperlink to source code we will be
+able talking about our implementation with people who can not read our
+code. Tester can tell which part of executable does not match the
+description and we can quickly find the peas of code what she is
+talking about. Product manager can tell where her understanding of our
+program does not match the implementation (more precisely our
+understanding of the program). Documenter can alter phrases from clear
+for him language according to documenting standarts.
+
+As a bonus, you can eliminate brace hell (if any) in your code. You
+can provide your executable with back links to documentation for
+explaining what your program do (in help screens or assistant popup
+messages for example) and let the user quickly find the description he
+is interested in online documentation. You can reuse code together
+with documentation in other projects. Also if your company deals with
+AI you can train the AI to generate code blocks based on snippets
+found in your code (your code become a set of snippets).
+
+Here you can see and example of Literate Programming code: https://github.com/pva-outdoor/literate-example
+I beg pardon of users who don't speak Russian. I just had no time
+for translating it it English (but you can use the power of ChatGPT2
+for translating the documentation in the language you want).
+
+The obvious drawbacks of the approach you may see are:
+
+- The code reads better in natural language but it becomes more
+  tangled in programming language. 
+
+- You have to use some tool to convert your program to code. After
+  converting the code looks ugly.
+
+- Some highly experienced in one programming language developers
+  confuses looking at literate programming style code.
+
+- Debuggers usually shows execution points in programming code but
+  not in literal source.  
+
+* Back to code
+
+These issues can be resolve with going back to programming language
+code. If we put our literated part into some special comments we can
+ship our already well-formatted code with extra information. I will be
+both readable to developers and coupled with information for others.
+
+Back to our example:
+----------------------------------------
+#+begin_src c
+  /*i	
+	Our job is to get some useful information based on database name.
+	Doing the job the program connect to database and gets all needed
+	data. */
+
+  struct do_our_job
+  {
+	const char *database;
+	...
+  }
+
+  int do_our_job(const char *database)
+  {
+	do_our_job x[1];
+	x->database = database;
+
+	initialize_database_access(x);
+	if (!connect_to_databse(x)) { return -1; }
+
+	/* code is ommited here */
+
+	return 0;
+  }
+
+  void initialize_database_access(struct do_our_job *x)
+	{
+	  ...
+	}
+
+  /*i
+	There are 3 attempts to connect to the database. In case of failure
+	the program warns user of failure and does not do the job. */
+
+  bool connect_to_databse(struct do_our_job *x)
+	{
+	  bool is_connected = false;
+
+	  if (3 == try_number)
+		{
+		  warn_user_of_failure(x);
+		  return false;
+		}
+
+	  return true;
+	}
+
+  /*i
+	Whe warnnig message is printed to standard output and contains the
+	description what happened from the operating system. */
+
+  void warn_user_of_failure(struct do_our_job *x)
+	{
+	  warn("Cannot connect to `%s'", x->database);
+	}
+#+end_src
+
+----------------------------------------
+
+Now we can get all block comments starting with =/*i= from our code
+and glue them together for getting documentation. We can use any text
+processing tool for that, even =sed=. The rest to do is choose some
+markup language for documentation. Based on my experience I could
+state that the language should be tolerant to indenting (because most
+code pretty printers reindents text in comments).
+
+You can see an example of such documentation here: https://github.com/pva-outdoor/xml-embedded
+The code is not working but this is not a goal for the example. The
+documentation in Texinfo can be easely retrieved from that code and
+converted to HTML, PDF and other formats for giving someone.
+
+* Pros and cons
+
+The presented approach has cons and pros. Pros:
+
+- You are adding new useful information to your code. THe information
+  can be used to make your code more descriptive (even if it is
+  already well-formatted).
+
+- You can easily obtain from your code the description for people who
+  do not know the programming language you use. You can speak with
+  those people in common language (which is the natural language).
+
+- You can save your current workflow. You are just to add comments in
+  your code. No special tools required for this.
+
+- While adding documentation to exiting code you are reviewing your
+  code with eyes of the program user. You can find out how it is
+  comfortable to use or understand your product. Sometimes it is
+  helpful to describe your code with someone else. For example once I
+  wrote the following thing: "All files and directories in the
+  directory containg dots in their names are examined to..." and
+  got that "*.*" was not that the author wanted to say.
+
+- You may find pieces of your code that need to be refactored. For
+  example I spent almost 50% time to refactoring my code at the first
+  weeks of life of one my project. It is much less code to refactor
+  then you are dealing with legacy project. 
+
+- When you rearrange code like a storry you put the most important
+  things first. New people reading your spends less time to get key
+  moments.
+
+- You can use the introduced information in many other ways.
+
+Cons:
+
+- You need extra effort to keep code and documentation coherent each
+  other. It takes a lot of time. For example I spent a week
+  documenting the code what wrote in two weeks (while this time
+  includes code refactoring).
+
+- You have to choose common for your team markup language. There are
+  restrictions to possible choices (it should be simple to embed it to
+  comments).
+
+* Build
+
+For successful build it is requred =lua= to be installed in your
+system. Appropriate =pkgconfig= bindings also should be present
+(usually they are when you installing loa from official repositories).
+Also =make= and =gcc= should be installed.
+
+This is an Automake project aimed to simplify the build and
+integration into several (UNIX-like) platforms. Some highly qulified
+specialists maintains the build system but the building itself is very
+easy for ordinary user. It is done with a few steps:
+
+1. Select (or create) a directory for output files. I recommend not
+   pushing everything into source directories.
+
+   : mkdir obj && cd obj
+
+2. Configure the build for your platform. There may be a lot of
+   options which you can see invoking  ~configure --help~. I am
+   assuming  that you just completed the previous step and locating in
+   =obj= directory. It is the simplest configuration will be selected
+   -- a build for local machine for all users access.
+
+   : ../configure
+
+3. Now build the ptoject
+
+   : make
+
+4. Install compiled project into your file system (for =cygwin= users
+   =sudo= is not needed). During that the local documentation will be
+   built and made available for all users.
+
+   : sudo make install
+
+* Usage
+
+You can read local documentation this way:
+
+: info test-lua
+
+There are detailed information on staring, using and setting up (with
+a tiny tutorial). Just for case I duplicated the documentation to WIKI
+pages.
+
+* Exporting documentation to other formats
+
+Emacs or Pandoc are required to export the documentation. The
+documentation is composed in =org-mode= format and is located in
+=lua/test-lua.org= file. Refer to instructions of exporting in Emacs
+or Pandoc documentation. It is LaTeX (or TeXLive package) may be
+required for exporting to PDF.
+
+* Editing source code
+
+This project is written in Literate Programming style and the source
+code is located in =*.org= files. You have to change source code in
+=#+begin_src XXX :noweb yes= block in synchronization with description
+of the blocks (to reach matching new implementation the documentation).
+After changing you have to rebuild the project. All nesscessary
+generation rules are already present in the build system.

@@ -1,0 +1,71 @@
+#+PROPERTY: header-args: :tangle no
+
+#+begin_src lua :tangle yes :exports none
+  local rawget = rawget
+  _ENV.defvar = true
+#+end_src
+
+В lua глобальные переменные объявляются очень легко. Также доступ ко
+всем функциям и библиотекам осуществляется как раз через глобальные
+переменные. Таким образом, добавив у себя в скрипте глобальную
+переменную ~print~ (просто забыв сделать её локальной), вы закрываете
+себе доступ к функции ~print~. Чтобы отслеживать такие вещи, можно
+использовать данный модуль. После подключения модуля становится
+невозможным создать глобальную переменную так:
+
+#+begin_src lua
+new_global_var = "значение"
+#+end_src
+
+Если переменная ещё не была создана, то попытка сохранения в эту
+переменную будет пресекаться вызовом ошибки:
+
+: attempt to write to undeclared variable XXX
+
+А попытка чтения этой переменной будет выведена на экран:
+
+: attempt to read undeclared variable XXX
+
+#+name: Запрет создавать переменные
+#+begin_src lua :tangle yes :exports none
+setmetatable(
+   _ENV, {
+	  __newindex = function (_, n, val)
+		 error("attempt to write to undeclared variable "..n, 2)
+	  end,
+	  __index = function (_, n)
+		 print("attempt to read undeclared variable "..n)
+		 return nil
+	  end
+})
+#+end_src
+
+Для создания глобальной переменной теперь нужно будет сделать вызов
+функции:
+
+#+begin_src lua
+defvar("new_global_var", "значение")
+#+end_src
+
+В этом случае будет создана переменная с указанным значением (которое
+не должно быть ~nil~). В lua значение ~nil~ используется для удаления
+элемента таблицы, поэтому присваивание такого значения приведёт к
+автоматическому удалению глобальной переменной.
+
+Можно создать переменную без начального значения, и тогда она примет
+значение ~true~:
+
+#+begin_src lua
+defvar("new_global_var")
+#+end_src
+
+#+name: Метод декларации переменной
+#+begin_src lua :tangle yes :exports none
+  return function(name, initval)
+	 local declared = rawget(_ENV, name)
+	 if nil ~= declared then
+		print(string.format("warning: Redeclaration of %s (which is %s).", name, declared))
+	 end
+	 rawset(_G, name, initval or false)
+  end
+#+end_src

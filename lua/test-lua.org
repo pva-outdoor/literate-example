@@ -1,0 +1,33 @@
+#+TITLE: Демонстрация Literate Programming
+#+AUTHOR: Андрей Петров
+#+PROPERTY: header-args: :tangle no
+
+#+LANGUAGE: ru
+#+LATEX_COMPILER: pdflatex
+#+latex_class: article
+#+latex_class_OPTIONS: [a4paper,11pt,titlepage,oneside,draft]
+#+options: ^:{}
+#+latex_header: \usepackage{makeidx}\makeindex
+#+latex_header: \DeclareUnicodeCharacter{21A9}{\hookleftarrow}
+#+latex_header: \usepackage{pmboxdraw}
+#+latex_header: \usepackage{hyperref}
+#+LATEX: \tolerance=1000
+#+LATEX: \medskip
+
+В тексте используется терминология, принятая в lua. Например,
+хеш-таблицы называются просто таблицами.
+
+* Приложения
+
+** Вывод структур на печать
+#+INCLUDE: "pprint.org"
+** Отладка внешних ссылок
+#+INCLUDE: "defvar.org"
+
+#+LATEX: \printindex
+
+# Local Variables:
+# org-latex-listings: minted
+# org-latex-default-packages-alist: (("T2A" "fontenc" t ("pdflatex" "latex")))
+# org-latex-packages-alist: (("main=russian,english" "babel" t ("pdflatex" "latex")) ("AUTO" "polyglossia" t ("xelatex" "lualatex")) ("" "color") ("" "minted"))
+# End:

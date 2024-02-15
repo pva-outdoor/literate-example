@@ -1,0 +1,489 @@
+#+PROPERTY: header-args: :tangle no
+
+В этом модуле предоставляется возможность выводить на экран
+структурированные данные в отформатированном виде, понятном для
+человека. Модуль экспортирует одну единственную функцию ~pprint~.  Эта
+функция принимает на вход данные, которые нужно напечатать и
+необязательную таблицу настроек:
+
+#+begin_src lua
+  pprint(data, {...})
+#+end_src
+
+Например, так можно вывести на экран все глобальные переменные:
+
+#+begin_src lua
+  pprint(_G, {name="global variables"})
+#+end_src
+
+И на выходе получим такое дерево:
+
+#+begin_example
+ global variables:
+  ├ _G: same as global variables
+  ├ _VERSION: Lua 5.4
+  ├ arg:
+  │  ├ 0: lua
+  │  ├ 1: -l
+  │  ├ 2: pprint
+  │  ├ 3: -l
+  │  └ 4: profind
+  ├ assert: function: 0x55eb7506b4f0
+  ├ collectgarbage: function: 0x55eb7506c960
+  ├ coroutine:
+  │  ├ close: function: 0x55eb7506f5c0
+  │  ├ create: function: 0x55eb7506d770
+  │  ├ isyieldable: function: 0x55eb7506ea70
+  │  ├ resume: function: 0x55eb7506d570
+  │  ├ running: function: 0x55eb7506d880
+  │  ├ status: function: 0x55eb7506eb00
+  │  ├ wrap: function: 0x55eb7506e9b0
+  │  └ yield: function: 0x55eb7506d8f0
+  ├ debug:
+  │  ├ debug: function: 0x55eb75072a50
+  │  ├ gethook: function: 0x55eb750714b0
+  │  ├ getinfo: function: 0x55eb75070520
+  │  ├ getlocal: function: 0x55eb75070b90
+  ...
+#+end_example
+
+Таблицу настроек можно не передавать совсем, или передавать
+частично. Тогда все не указанные настройки примут свои значения по
+умолчанию. При этом если передать ключи, которые не являются
+настройками, то последние будут проигнорированы.
+
+#+name: Форматированная печать
+#+begin_src lua :tangle yes :noweb yes :exports none
+  <<Отладка внешних ссылок>>
+
+	return function(obj, options)
+		   <<Термины и определения>>
+		   <<Параметры форматирования по умолчанию>>
+		   <<Анализ фильтра данных>>
+		   <<Значения параметров по умолчанию>>
+		   <<Вывод на экран>>
+	 end
+#+end_src
+
+* Настройки форматирования
+
+В качестве настроек форматирования можно указывать следующие:
+
+| ключ       | описание                             | по умолчанию |
+|------------+--------------------------------------+--------------|
+| name       | название корневого элемента          | <value>      |
+| search     | критерий поиска                      | показать всё |
+| out        | куда выводить данные (поток)         | io.output()  |
+| maxlines   | максимальное количество строк печати | 24           |
+| maxdepth   | максимальная глубина структуры       | 8            |
+| showlineno | показывать номера строк              | нет          |
+| showtype   | показывать типы данных lua           | нет          |
+| bullets    | см. [[Отрисовка узлов]]                  | линии        |
+| indent     | см. [[Отступы слева]]                    | пробелы      |
+
+#+name: Параметры форматирования по умолчанию
+#+begin_src lua :noweb yes :exports none
+	 local INDENTS, BULLETS = {" ", " "}, {" │ ", " ├ ", "   ", " └ "}
+	 options = options or EMPTY
+	 local name = options.name or "<value>"
+	 local out = options.out or io.output()
+	 local maxlines = options.maxlines or 24
+	 local maxdepth = options.maxdepth or 8
+	 local showlineno = options.showlineno
+	 local showtypes = options.showtype
+	 local midind, midbul, lastind, lastbul = unpack(options.bullets or BULLETS)
+	 local leftind, leftbul = unpack(options.indent or INDENTS)
+#+end_src
+
+** Ограничения размера вывода
+
+Обход дерева составных данных ограничен в длину (параметр ~maxlines~)
+и глубину (параметр ~maxdepth~). Изменяя эти параметры, можно добиться
+различных эффектов. Например, можно вывести всех функций работы со
+строками (модуль ~string~), установив глубину обхода 1:
+
+#+begin_src lua
+  pprint(string, {name="string", maxdepth=1})
+#+end_src
+
+** Отрисовка узлов
+
+Отрисовка линий, соединяющие узлы происходит подстановкой одной из
+четырёх строк ~{midind, midbul, lastind, lastbul}~ в зависимости от
+структуры элементов. Если указываете эту настройку, вы должны указать
+все 4 элемента сразу.
+
+- midind :: отступ для элемента, после которого есть ещё один элемент
+- midbul :: ответвление для элемента, после которого есть ещё один элемент
+- lastind :: отступ для последнего элемента
+- lastbul :: ответвление для последнего элемента
+
+Для сохранения хорошей читаемости при печати данных, эти строки должны
+иметь одинаковую длину при отображении. Они могут иметь разную длину
+если, например, вы захотите добавить раскраску с использованием
+управляющих последовательностей ANSI, но при отображении они должны
+занимать одинаковое количество знакомест в ширину.
+
+Например, так можно визуально разрядить линии, показывающие структуру
+дерева:
+
+#+begin_src lua
+  pprint(_G,
+	{bullets = {"  │  ", "  ├─ ", "     ", "  └─ "}})
+#+end_src
+
+** Отступы слева
+  
+Отрисовка отступов происходит подстановкой одной из двух
+строк ~{leftind, leftbul}~. Если указываете эту настройку, вы должны
+указать все 2 элемента сразу.
+
+- leftind :: отступ без ответвлений
+- leftbul :: отступ с ответвления для корневого элемента
+
+Для сохранения хорошей читаемости при печати данных, эти строки также должны
+иметь одинаковую длину при отображении (см [[Отрисовка узлов]]).
+Например, так можно сделать визуальное разделение дерева и номеров строк:
+
+#+begin_src lua
+  pprint(_G, {indent={" ║ ", " ╖ "})
+#+end_src
+
+* Поиск совпадений
+
+При выводе данных можно наложить фильтр, который скроет не
+интересующие узлы и значения. При этом будут показаны те узлы,
+названия или значения которых представляют интерес, и узлы, содержащие
+интересующие узлы внутри себя. Если фильтр не указывается, то
+отображаются все узлы структуры, иначе при выводе данные просеиваются
+через указанный фильтр и название корневого элемента дополняется
+пометкой, что отображение происходит с фильтрацией.
+
+#+name: Анализ фильтра данных
+#+begin_src lua :noweb yes :exports none
+  local function parse_filter(search)
+	 if search then
+		name = format("%s filtered with `%s'", name, search)
+		   <<Определение метода поиска>>
+		local match = {}
+		   <<Поиск совпадений>>
+		return function(x) return match[x] end
+	 else
+		return function() return true end
+	 end
+  end
+  local filter = parse_filter(options.search)
+#+end_src
+
+Возможны следующие варианты для указания интересующих узлов:
+
+- совпадение строки с регулярным выражением ~string.find~, например:
+
+  #+begin_src lua
+	pprint(data, {search = "work.-sec"})
+  #+end_src
+  
+- задание функции, которая явно показывает, интересует ли указанный
+  ключ или значение, например:
+
+  #+begin_src lua
+	pprint(data,
+		   {search = function(x) return x[foo] == "bar" end})
+  #+end_src
+
+- Поиск какого-то определённого объекта (но не строки и не функции). В
+  случае, если требуется найти определённую строку или функцию, нужно
+  использовать первые два варианта отсеивания. Например. можно найти
+  таблицу:
+
+  #+begin_src lua
+	pprint(data, {search = some_table})
+  #+end_src
+    
+#+name: Определение метода поиска
+#+begin_src lua :noweb yes :exports none
+  local wanted
+  local search_type = type(search)
+  if "string" == search_type then
+	 wanted = function(x) return nil ~= find(x, search) end
+  elseif "function" == search_type then
+	 wanted = search
+  else
+	 wanted = function(x) return x == search end
+  end
+#+end_src
+
+Для циклических (рекурсивных) структур применение критерия поиска
+происходит только один раз (используется подход ~memoization~).
+
+В процессе отсеивания данных, сложные и простые данные обрабатываются по-разному.
+#+name: Поиск совпадений
+#+begin_src lua :noweb yes :exports none
+  local function search_pattern_recursive(obj)
+	 local vis = match[obj]
+	 if nil == vis then
+		local objtype = type(obj)
+		if "table" == objtype then
+		   <<Совпадение составных данных>>
+		else
+		   <<Совпадение простых данных>>
+		end
+	 end
+  end
+  search_pattern_recursive(obj)
+#+end_src
+Для простых данных, их строковое представление (в случае поиска по
+регулярному выражению) или их значение (в остальных случаях)
+сравнивается с критерием поиска.
+#+name: Совпадение простых данных
+#+begin_src lua :noweb yes :exports none
+  vis = wanted(obj)
+  match[obj] = vis
+  return vis  
+#+end_src
+Если составные данные имеют преобразование в строку (метаметод
+~__tostring~), то результат этого преобразования также сравнивается с
+критерием поиска.
+
+#+name: Совпадение составных данных по строке
+#+begin_src lua :noweb yes :exports none
+  local __tostring = (getmetatable(obj) or {}).__tostring
+  if __tostring and find(__tostring(obj), search) then
+	 match[obj] = true
+  else
+	 <<Обычное совпадение составных данных>>
+  end
+#+end_src
+
+В остальных случаях отображаются те компоненты составных данных, для
+которых либо ключ, либо значение (рекурсивно) попадают под критерий фильтра.
+
+#+name: Обычное совпадение составных данных
+#+begin_src lua :noweb yes :exports none
+  match[obj] = false
+  local found = false
+  for k, v in pairs(obj) do
+	 if search_pattern_recursive(k) or
+		search_pattern_recursive(v)
+	 then
+		found = true
+	 end
+  end
+  match[obj] = found
+#+end_src
+
+* Вывод на экран
+
+#+name: Вывод на экран
+#+begin_src lua :noweb yes :exports none
+  local visited, depth, lines = {}, 0, 0
+	 <<Вывод строки на экран>>
+	 <<Рекурсивная печать данных>>
+	 <<Вывод с подавлением ошибок>>
+#+end_src
+
+Количество строк, которые можно вывести на экран, ограничены
+настройкой ~showlineno~. Это сделано для того, чтобы не переполнять
+экран без надобности. Если вам действительно необходимо вывести всё на
+экран, укажите какое-нибудь большое число. Следует оставаться в
+разумных пределах, ведь вряд ли вы хотите вывести на экран миллион
+строк. Пример:
+
+#+begin_src lua
+  pprint(data, {maxlines=10^5})
+#+end_src
+
+#+name: Вывод строки на экран
+#+begin_src lua :noweb yes :exports none
+  local function do_pprint(line)
+	 lines = lines + 1
+		<<Возможный вывод номеров строк>>
+		out:write(line)
+	 if maxlines < lines then
+		error("Too many lines, use pprint(x, {maxlines=...}) to override")
+	 end
+  end
+#+end_src
+
+Можно отобразить номера строк при печати, используя настройку
+~showlineno~. Номера строк будут выведены слева (смещая всю картинку
+вправо), например:
+
+#+begin_src lua
+  pprint(data, {showlineno = true})
+#+end_src
+
+#+name: Возможный вывод номеров строк
+#+begin_src lua :noweb yes :exports none
+  if showlineno then out:write(format("%3d", lines)) end
+#+end_src
+
+При выводе на печать также предусмотрена защита от циклических
+(рекурсивных) данных. Под рекурсивными или циклическими данными
+понимаются данные, которые содержат внутри ссылки на себя. Каждая
+такая ссылка отображается только один раз. В случае, если она уже
+отображена, повторно она отображаться не будет. В этом случае будет
+отображаться текст-заменитель в виде простого элемента. Такое
+ограничение действует только на составные данные (так как только такие
+данные могут содержать циклы).
+
+#+name: Рекурсивная печать данных
+#+begin_src lua :noweb yes :exports none
+  local function pprint(obj, name, indent, bullet)
+	 if "table" == type(obj) then
+		local vis = visited[obj]
+		if vis then
+		   obj = vis
+		else
+		 <<Печать составных данных>>
+		end
+	 end
+		<<Печать простых данных>>
+  end
+#+end_src
+
+В случае, если составные данные имеют преобразование в строку, они
+будут отображаться как строка, а не как составные данные. При этом
+при повторном выводе таких данных (внутри одного сеанса печати)
+повторное преобразование в строку выполнено не будет. Это следует
+иметь в виду при учёте сторонних эффектов преобразований в строку.
+Например, если нужно будет вывести элемент, значение которого меняется
+при каждой попытке его прочитать, при повторении его внутри структуры,
+будет выведено одно и то же значение.
+
+#+name: Печать составных данных
+#+begin_src lua :noweb yes :exports none
+  local __tostring = (getmetatable(obj) or EMPTY).__tostring
+  if __tostring then
+	 obj = __tostring(obj)
+	 visited[obj] = obj
+  else
+	 do_pprint(format("%s%s:\n", bullet, name))
+	 depth = depth + 1
+	 if depth <= maxdepth then
+		visited[obj] = format("same as %s", name) -- TODO: path
+	  <<Отсеивание и вывод данных>>
+	 else
+		do_pprint(format("%s   ...\n", indent))
+	 end
+	 depth = depth - 1
+	 return
+  end
+#+end_src
+
+При печати простых данных возможны два варианта: вывод с типом данных
+и без. При выводе с типом данных, перед значением ключа составного
+элемента будет в скобках отображаться его тип данных.
+
+#+name: Печать простых данных
+#+begin_src lua :noweb yes :exports none
+	 if showtypes then
+		do_pprint(format("%s%s: (%s) %s\n", bullet, name, type(obj), obj))
+	 else
+		do_pprint(format("%s%s: %s\n", bullet, name, obj))
+	 end
+#+end_src
+
+Фильтр, отсеивающий отображаемое содержимое, применяется только к
+ключам и значениям составных структур. Поэтому простые данные,
+указанные непосредственно в ~pprint~ выведены будут всегда. Например
+следующий вызов напечатает ~hello~ несмотря на то, что это слово не
+подходит под фильтр отсеивания:
+
+#+begin_src lua
+  pprint("hello", {search = "aaa"})
+#+end_src
+
+#+name: Отсеивание и вывод данных
+#+begin_src lua :noweb yes :exports none
+  local keys = {}
+  for k, v in pairs(obj) do
+	 if filter(k) or filter(v) then
+		keys[1 + #keys] = k
+	 end
+  end
+	 <<Вывод на печать отсеянной части>>
+#+end_src
+
+Прошедшая отсеивание составная структура отображается в сортированном
+по возрастанию значений ключей виде. Ключи сортируются в зависимости
+от их типа данных (используются операторы сравнения lua), поэтому
+и числовые, и строковые ключи будут отсортированы правильно.
+
+#+name: Вывод на печать отсеянной части
+#+begin_src lua :noweb yes :exports none
+  sort(keys)
+  local indent1, bullet1 = indent..midind, indent..midbul
+  for i, k in ipairs(keys) do
+	 if i == #keys then
+		indent1, bullet1 = indent..lastind, indent..lastbul
+	 end
+	 pprint(obj[k], k, indent1, bullet1)
+  end
+#+end_src
+
+* Особенности реализации
+
+В случае возникновения ошибок при подготовке и выводе данных, вообще,
+возможны два варианта. В одном случае ошибки подавляются, точнее не
+распространяются дальше функции печати. Это вполне естественно, если
+функция печати не является частью обязательной логики программы.  Но в
+этом случае искать место в программе, где не удалось сделать вывод на
+экран приходится самостоятельно. При этом из полезной информации на
+экран выводится только констатация факта ошибки.
+
+#+name: Вывод с подавлением ошибок
+#+begin_src lua :noweb yes :exports none
+  local ok, err = pcall(pprint, obj, name, leftind, leftbul)
+  if not ok then
+	 out:write(err, "\n")
+  end
+#+end_src
+
+В случае, когда ошибка распространяется наружу из функции печати,
+программа, вызывающая печать прерывается. Если при этом позволить
+ошибке полностью остановить выполнение программы и вывести на экран
+стек, то можно отследить, в каком месте не удалось вывести на печать,
+и, возможно, почему.
+
+#+name: Вывод с распространением ошибок
+#+begin_src lua :noweb yes :exports none
+  pprint(obj, name, leftind, leftbul)
+#+end_src
+
+В текущей реализации в случае возникновения ошибок при подготовке и
+выводе данных, печать будет прерываться, но ошибка дальше
+распространяться не будет.
+
+Следует отметить особенность такую реализации: модуль запоминает
+функции (работы со строками, таблицами и т.д.), на которые он
+опирается. После загрузки модуля переопределения этих функций на него
+не влияют.
+
+#+name: Термины и определения
+#+begin_src lua :noweb yes :exports none
+	 local format, find = string.format, string.find
+	 local print, getmetatable, type = print, getmetatable, type
+	 local sort = table.sort
+	 local unpack = table.unpack
+	 local EMPTY = {}
+#+end_src
+
+Для отладки использования внешних ссылок (а также правильности
+использования локальных переменных), можно предварительно подключить
+модуль ~defvar~. Это можно сделать, например, так:
+
+#+begin_src shell-script
+  lua -l defvar -l pprint -i ваш-скрипт.lua
+#+end_src
+
+#+name: Отладка внешних ссылок
+#+begin_src lua :noweb yes :exports none
+  if _ENV.defvar then
+	 defvar("pprint")
+  end
+#+end_src
+
+# Local Variables:
+# tab-width: 4
+# End:
