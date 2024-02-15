@@ -13,7 +13,7 @@ does not need an explanation. I see some problems here.
   their head. I mean that they used to apply some special coding
   style, a library/functions set and so on. For that reason when such
   people sees other isolated team's code they may say that other's
-  code is not as clear as their's one.
+  code is not as clear as theirs one.
 
 - Suppose you have a high quality self-documented code. Can you tell
   other people (who may not know your style, programming language,
@@ -23,8 +23,8 @@ does not need an explanation. I see some problems here.
 
 - Can you answer looking on pretty formatted code how the program
   SHOULD work? Suppose you are showing your program to testers or
-  professional documeters. You can tell how your program works but can
-  you give 100% guaratee that it contains no bugs and does exactly
+  professional documenters. You can tell how your program works but can
+  you give 100% guarantee that it contains no bugs and does exactly
   that it should? Even very adult projects has bugs.
 
 * The idea of Literate Programming
@@ -32,7 +32,7 @@ does not need an explanation. I see some problems here.
 Well famous person in programming, Donald Knuth, introduced an
 approach called Literate Programming. It allows explaining code in
 language very close to natural. Here I will not use the original
-approach but rather some peudocode. We can write out program some way
+approach but rather some pseudoscope. We can write out program some way
 like this (note that this is a short example with many things
 omitted):
 
@@ -42,7 +42,7 @@ omitted):
 
 To do our job we need to initialize database access and connect to
 database. After that we ... (here goes explanation of code in human
-laguage).
+language).
 
 Procedure arguments: /database/ - the name of database to connect.
 
@@ -52,15 +52,15 @@ Returns: one of the following values: ...
   int do_our_job(const char *database)
   {
 	<<Initialize database access>>
-	<<Connect to databse or return>>
+	<<Connect to database or return>>
 
-	/* code is ommited here */
+	/* code is omitted here */
 
 	return 0;
   }
 #+end_src
 
-**Connect to databse or return**
+*Connect to database or return*
 
 We keep information on connection status in ~is_connected~ variable
 and track number of connection attempts in ~is_connected~. On the
@@ -78,9 +78,9 @@ third attempt we notify user of connection failure and exit.
 	}
 #+end_src
 
-**Warn user of failure**
+*Warn user of failure*
 
-We just print error message with operating systems's last error
+We just print error message with operating system's last error
 description on standard output.
 
 #+begin_src c
@@ -92,7 +92,7 @@ description on standard output.
 Here we pedantically explain what our code do and this information
 could be useful for developers who are not familiar with our
 libraries, coding style or programming language. They even can learn
-our stuff with this desciption. But where we have some drawbacks:
+our stuff with this description. But where we have some drawbacks:
 
 - He already had well-formatted code, descriptive information is not
   very pleasant for us.
@@ -107,7 +107,7 @@ our stuff with this desciption. But where we have some drawbacks:
 
 Instead of teaching someone to read our code we can explain what our
 code supposed to do in aspects of end user information. Doing that we
-are adding but not duplicatin information. Lets see how it may look
+are adding but not duplication information. Lets see how it may look
 like in the previous example:
 
 ----------------------------------------
@@ -120,9 +120,9 @@ data.
   int do_our_job(const char *database)
   {
 	<<Initialize database access>>
-	<<Connect to databse or return>>
+	<<Connect to database or return>>
 
-	/* code is ommited here */
+	/* code is omitted here */
   }
 #+end_src
 
@@ -141,7 +141,7 @@ the program warns user of failure and does not do the job.
 	}
 #+end_src
 
-Whe warnnig message is printed to standard output and contains the
+The warning message is printed to standard output and contains the
 description what happened from the operating system.
 
 #+begin_src c
@@ -162,7 +162,7 @@ From now we can:
   Doing the job the program connect to database and gets all needed
   data. There are 3 attempts to connect to the database. In case of
   failure the program warns user of failure and does not do the
-  job. Whe warnnig message is printed to standard output and contains
+  job. The warning message is printed to standard output and contains
   the description what happened from the operating system.
   #+end_quote
 
@@ -173,7 +173,7 @@ description and we can quickly find the peas of code what she is
 talking about. Product manager can tell where her understanding of our
 program does not match the implementation (more precisely our
 understanding of the program). Documenter can alter phrases from clear
-for him language according to documenting standarts.
+for him language according to documenting standards.
 
 As a bonus, you can eliminate brace hell (if any) in your code. You
 can provide your executable with back links to documentation for
@@ -206,7 +206,7 @@ The obvious drawbacks of the approach you may see are:
 * Back to code
 
 These issues can be resolve with going back to programming language
-code. If we put our literated part into some special comments we can
+code. If we put our literator part into some special comments we can
 ship our already well-formatted code with extra information. I will be
 both readable to developers and coupled with information for others.
 
@@ -230,9 +230,9 @@ Back to our example:
 	x->database = database;
 
 	initialize_database_access(x);
-	if (!connect_to_databse(x)) { return -1; }
+	if (!connect_to_database(x)) { return -1; }
 
-	/* code is ommited here */
+	/* code is omitted here */
 
 	return 0;
   }
@@ -246,7 +246,7 @@ Back to our example:
 	There are 3 attempts to connect to the database. In case of failure
 	the program warns user of failure and does not do the job. */
 
-  bool connect_to_databse(struct do_our_job *x)
+  bool connect_to_database(struct do_our_job *x)
 	{
 	  bool is_connected = false;
 
@@ -260,7 +260,7 @@ Back to our example:
 	}
 
   /*i
-	Whe warnnig message is printed to standard output and contains the
+	The warning message is printed to standard output and contains the
 	description what happened from the operating system. */
 
   void warn_user_of_failure(struct do_our_job *x)
@@ -276,18 +276,18 @@ and glue them together for getting documentation. We can use any text
 processing tool for that, even =sed=. The rest to do is choose some
 markup language for documentation. Based on my experience I could
 state that the language should be tolerant to indenting (because most
-code pretty printers reindents text in comments).
+code pretty printers re-indents text in comments).
 
 You can see an example of such documentation here: https://github.com/pva-outdoor/xml-embedded
 The code is not working but this is not a goal for the example. The
-documentation in Texinfo can be easely retrieved from that code and
+documentation in Tex-info can be easily retrieved from that code and
 converted to HTML, PDF and other formats for giving someone.
 
 * Pros and cons
 
 The presented approach has cons and pros. Pros:
 
-- You are adding new useful information to your code. THe information
+- You are adding new useful information to your code. The information
   can be used to make your code more descriptive (even if it is
   already well-formatted).
 
@@ -303,7 +303,7 @@ The presented approach has cons and pros. Pros:
   comfortable to use or understand your product. Sometimes it is
   helpful to describe your code with someone else. For example once I
   wrote the following thing: "All files and directories in the
-  directory containg dots in their names are examined to..." and
+  directory containing dots in their names are examined to..." and
   got that "*.*" was not that the author wanted to say.
 
 - You may find pieces of your code that need to be refactored. For
@@ -311,7 +311,7 @@ The presented approach has cons and pros. Pros:
   weeks of life of one my project. It is much less code to refactor
   then you are dealing with legacy project. 
 
-- When you rearrange code like a storry you put the most important
+- When you rearrange code like a story you put the most important
   things first. New people reading your spends less time to get key
   moments.
 
@@ -330,13 +330,13 @@ Cons:
 
 * Build
 
-For successful build it is requred =lua= to be installed in your
+For successful build it is required =lua= to be installed in your
 system. Appropriate =pkgconfig= bindings also should be present
-(usually they are when you installing loa from official repositories).
-Also =make= and =gcc= should be installed.
+(usually they are when you installing lua from official repositories).
+Also =make= and =GCC= should be installed.
 
 This is an Automake project aimed to simplify the build and
-integration into several (UNIX-like) platforms. Some highly qulified
+integration into several (UNIX-like) platforms. Some highly qualified
 specialists maintains the build system but the building itself is very
 easy for ordinary user. It is done with a few steps:
 
@@ -353,7 +353,7 @@ easy for ordinary user. It is done with a few steps:
 
    : ../configure
 
-3. Now build the ptoject
+3. Now build the project
 
    : make
 
@@ -387,5 +387,5 @@ This project is written in Literate Programming style and the source
 code is located in =*.org= files. You have to change source code in
 =#+begin_src XXX :noweb yes= block in synchronization with description
 of the blocks (to reach matching new implementation the documentation).
-After changing you have to rebuild the project. All nesscessary
+After changing you have to rebuild the project. All necessary
 generation rules are already present in the build system.
