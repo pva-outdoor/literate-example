@@ -57,6 +57,7 @@
   <<Отладка внешних ссылок>>
 
 	return function(obj, options)
+		local visited = {}
 		   <<Термины и определения>>
 		   <<Параметры форматирования по умолчанию>>
 		   <<Анализ фильтра данных>>
@@ -159,22 +160,6 @@
 через указанный фильтр и название корневого элемента дополняется
 пометкой, что отображение происходит с фильтрацией.
 
-#+name: Анализ фильтра данных
-#+begin_src lua :noweb yes :exports none
-  local function parse_filter(search)
-	 if search then
-		name = format("%s filtered with `%s'", name, search)
-		   <<Определение метода поиска>>
-		local match = {}
-		   <<Поиск совпадений>>
-		return function(x) return match[x] end
-	 else
-		return function() return true end
-	 end
-  end
-  local filter = parse_filter(options.search)
-#+end_src
-
 Возможны следующие варианты для указания интересующих узлов:
 
 - совпадение строки с регулярным выражением ~string.find~, например:
@@ -199,18 +184,31 @@
   #+begin_src lua
 	pprint(data, {search = some_table})
   #+end_src
-    
-#+name: Определение метода поиска
+
+#+name: Анализ фильтра данных
 #+begin_src lua :noweb yes :exports none
-  local wanted
-  local search_type = type(search)
-  if "string" == search_type then
-	 wanted = function(x) return nil ~= find(x, search) end
-  elseif "function" == search_type then
-	 wanted = search
-  else
-	 wanted = function(x) return x == search end
+  local function parse_filter(search)
+	 local filter
+	 if search then
+		name = format("%s filtered with `%s'", name, search)
+		local search_type = type(search)
+		if "string" == search_type then
+		   filter = function(x)
+			  return "string" == type(x)
+				 and nil ~= find(x, search)
+		   end
+		elseif "function" == search_type then
+		   filter = search
+		else
+		   filter = function(x) return x == search end
+		end
+	 else
+		filter = function() return true end
+	 end
+
+	 <<Поиск совпадений>>
   end
+  parse_filter(options.search)
 #+end_src
 
 Для циклических (рекурсивных) структур применение критерия поиска
@@ -220,11 +218,11 @@
 #+name: Поиск совпадений
 #+begin_src lua :noweb yes :exports none
   local function search_pattern_recursive(obj)
-	 local vis = match[obj]
+	 local vis = visited[obj]
 	 if nil == vis then
 		local objtype = type(obj)
 		if "table" == objtype then
-		   <<Совпадение составных данных>>
+		   <<Совпадение составных данных по строке>>
 		else
 		   <<Совпадение простых данных>>
 		end
@@ -237,8 +235,8 @@
 сравнивается с критерием поиска.
 #+name: Совпадение простых данных
 #+begin_src lua :noweb yes :exports none
-  vis = wanted(obj)
-  match[obj] = vis
+  vis = filter(obj)
+  visited[obj] = vis
   return vis  
 #+end_src
 Если составные данные имеют преобразование в строку (метаметод
@@ -248,8 +246,8 @@
 #+name: Совпадение составных данных по строке
 #+begin_src lua :noweb yes :exports none
   local __tostring = (getmetatable(obj) or {}).__tostring
-  if __tostring and find(__tostring(obj), search) then
-	 match[obj] = true
+  if __tostring and filter(__tostring(obj)) then
+	 visited[obj] = true
   else
 	 <<Обычное совпадение составных данных>>
   end
@@ -260,7 +258,7 @@
 
 #+name: Обычное совпадение составных данных
 #+begin_src lua :noweb yes :exports none
-  match[obj] = false
+  visited[obj] = false
   local found = false
   for k, v in pairs(obj) do
 	 if search_pattern_recursive(k) or
@@ -269,14 +267,14 @@
 		found = true
 	 end
   end
-  match[obj] = found
+  visited[obj] = found
 #+end_src
 
 * Вывод на экран
 
 #+name: Вывод на экран
 #+begin_src lua :noweb yes :exports none
-  local visited, depth, lines = {}, 0, 0
+  local depth, lines = 0, 0
 	 <<Вывод строки на экран>>
 	 <<Рекурсивная печать данных>>
 	 <<Вывод с подавлением ошибок>>
@@ -332,10 +330,10 @@
   local function pprint(obj, name, indent, bullet)
 	 if "table" == type(obj) then
 		local vis = visited[obj]
-		if vis then
+		if "string" == type(vis) then
 		   obj = vis
 		else
-		 <<Печать составных данных>>
+			  <<Печать составных данных>>
 		end
 	 end
 		<<Печать простых данных>>
@@ -362,7 +360,7 @@
 	 depth = depth + 1
 	 if depth <= maxdepth then
 		visited[obj] = format("same as %s", name) -- TODO: path
-	  <<Отсеивание и вывод данных>>
+		   <<Отсеивание и вывод данных>>
 	 else
 		do_pprint(format("%s   ...\n", indent))
 	 end
@@ -398,7 +396,7 @@
 #+begin_src lua :noweb yes :exports none
   local keys = {}
   for k, v in pairs(obj) do
-	 if filter(k) or filter(v) then
+	 if visited[k] or visited[v] then
 		keys[1 + #keys] = k
 	 end
   end
