@@ -38,7 +38,7 @@ omitted):
 
 ----------------------------------------
 
-**Do some query**
+*Do some query*
 
 To do our job we need to initialize database access and connect to
 database. After that we ... (here goes explanation of code in human
