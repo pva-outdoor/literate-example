@@ -6,6 +6,7 @@ AC_CONFIG_HEADERS([config.h])
 AM_INIT_AUTOMAKE([-Wall -Werror foreign])
 
 # Checks for programs.
+AC_CHECK_PROGS(PROGS, [emacs])
 AC_PROG_CC
 AM_PROG_AR
 PKG_PROG_PKG_CONFIG
@@ -14,15 +15,12 @@ LT_INIT
 # Checks for libraries.
 
 # Checks for header files.
-dnl AC_CHECK_HEADERS([arpa/inet.h netinet/in.h sys/socket.h])
-dnl PKG_CHECK_MODULES_STATIC(ADM, [libssl lua])
 PKG_CHECK_VAR(LUA_CMOD, lua, INSTALL_CMOD)
 PKG_CHECK_VAR(LUA_LMOD, lua, INSTALL_LMOD)
 
 # Checks for typedefs, structures, and compiler characteristics.
 
 # Checks for library functions.
-dnl AC_CHECK_FUNCS([socket])
 
 AC_CONFIG_FILES([Makefile lua/Makefile])
 AC_OUTPUT

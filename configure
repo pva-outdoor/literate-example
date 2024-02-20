@@ -715,6 +715,7 @@ CPPFLAGS
 LDFLAGS
 CFLAGS
 CC
+PROGS
 AM_BACKSLASH
 AM_DEFAULT_VERBOSITY
 AM_DEFAULT_V
@@ -3145,6 +3146,53 @@ fi
 
 
 # Checks for programs.
+for ac_prog in emacs
+do
+  # Extract the first word of "$ac_prog", so it can be a program name with args.
+set dummy $ac_prog; ac_word=$2
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
+printf %s "checking for $ac_word... " >&6; }
+if test ${ac_cv_prog_PROGS+y}
+then :
+  printf %s "(cached) " >&6
+else $as_nop
+  if test -n "$PROGS"; then
+  ac_cv_prog_PROGS="$PROGS" # Let the user override the test.
+else
+as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+for as_dir in $PATH
+do
+  IFS=$as_save_IFS
+  case $as_dir in #(((
+    '') as_dir=./ ;;
+    */) ;;
+    *) as_dir=$as_dir/ ;;
+  esac
+    for ac_exec_ext in '' $ac_executable_extensions; do
+  if as_fn_executable_p "$as_dir$ac_word$ac_exec_ext"; then
+    ac_cv_prog_PROGS="$ac_prog"
+    printf "%s\n" "$as_me:${as_lineno-$LINENO}: found $as_dir$ac_word$ac_exec_ext" >&5
+    break 2
+  fi
+done
+  done
+IFS=$as_save_IFS
+
+fi
+fi
+PROGS=$ac_cv_prog_PROGS
+if test -n "$PROGS"; then
+  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $PROGS" >&5
+printf "%s\n" "$PROGS" >&6; }
+else
+  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
+printf "%s\n" "no" >&6; }
+fi
+
+
+  test -n "$PROGS" && break
+done
+
 
 
 

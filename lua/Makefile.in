@@ -257,6 +257,7 @@ PATH_SEPARATOR = @PATH_SEPARATOR@
 PKG_CONFIG = @PKG_CONFIG@
 PKG_CONFIG_LIBDIR = @PKG_CONFIG_LIBDIR@
 PKG_CONFIG_PATH = @PKG_CONFIG_PATH@
+PROGS = @PROGS@
 RANLIB = @RANLIB@
 SED = @SED@
 SET_MAKE = @SET_MAKE@
@@ -809,20 +810,17 @@ uninstall-am: uninstall-dvi-am uninstall-html-am uninstall-info-am \
 .PRECIOUS: Makefile
 
 
-test-lua.texi: test-lua.org
-libtest.c: libtest.org
-defvar.lua: defvar.org
-pprint.lua: pprint.org
-test-lua.texi: test-lua.org
-
 .org.c:
-	emacs --batch -l org --kill "--eval=(org-babel-tangle-file \"$(PWD)/$<\" \"$(PWD)/$@\")"
+	emacs --batch -l org --kill "--eval=(org-babel-tangle-file (car command-line-args-left))" $<
+	touch $@
 
 .org.lua:
-	emacs --batch -l org --kill "--eval=(org-babel-tangle-file \"$(PWD)/$<\" \"$(PWD)/$@\")"
+	emacs --batch -l org --kill "--eval=(let ((org-confirm-babel-evaluate nil)) (require 'ob-tangle) (org-babel-tangle-file (car command-line-args-left)))" $<
+	touch $@
 
 .org.texi:
 	emacs --batch -l org -l ox-texinfo --kill $< "--eval=(org-texinfo-export-to-texinfo)"
+	touch $@
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

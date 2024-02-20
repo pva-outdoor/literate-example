@@ -39,29 +39,31 @@ end
 		        end
 		 
 		        local function search_pattern_recursive(obj)
-		               local vis = visited[obj]
-		               if nil == vis then
-		        	      local objtype = type(obj)
-		        	      if "table" == objtype then
-		        		 local __tostring = (getmetatable(obj) or {}).__tostring
-		        		 if __tostring and filter(__tostring(obj)) then
-		        		        visited[obj] = true
+		               if nil ~= obj then
+		        	      local vis = visited[obj]
+		        	      if nil == vis then
+		        		 local objtype = type(obj)
+		        		 if "table" == objtype then
+		        			       local __tostring = (getmetatable(obj) or {}).__tostring
+		        			       if __tostring and filter(__tostring(obj)) then
+		        			              visited[obj] = true
+		        			       else
+		        			              visited[obj] = false
+		        			              local found = false
+		        			              for k, v in pairs(obj) do
+		        			                     if search_pattern_recursive(k) or
+		        			              	      search_pattern_recursive(v)
+		        			                     then
+		        			              	      found = true
+		        			                     end
+		        			              end
+		        			              visited[obj] = found
+		        			       end
 		        		 else
-		        		        visited[obj] = false
-		        		        local found = false
-		        		        for k, v in pairs(obj) do
-		        		               if search_pattern_recursive(k) or
-		        		        	      search_pattern_recursive(v)
-		        		               then
-		        		        	      found = true
-		        		               end
-		        		        end
-		        		        visited[obj] = found
+		        			       vis = filter(obj)
+		        			       visited[obj] = vis
+		        			       return vis  
 		        		 end
-		        	      else
-		        		 vis = filter(obj)
-		        		 visited[obj] = vis
-		        		 return vis  
 		        	      end
 		               end
 		        end
