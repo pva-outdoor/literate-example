@@ -63,7 +63,7 @@ Returns: one of the following values: ...
 *Connect to database or return*
 
 We keep information on connection status in ~is_connected~ variable
-and track number of connection attempts in ~is_connected~. On the
+and track number of connection attempts in ~try_number~. On the
 third attempt we notify user of connection failure and exit.
 
 #+begin_src c
@@ -238,35 +238,38 @@ Back to our example:
   }
 
   void initialize_database_access(struct do_our_job *x)
-	{
-	  ...
-	}
+  {
+	...
+  }
 
   /*i
 	There are 3 attempts to connect to the database. In case of failure
 	the program warns user about failure and does not do the job. */
 
   bool connect_to_database(struct do_our_job *x)
-	{
-	  bool is_connected = false;
+  {
+	bool is_connected = false;
 
-	  if (3 == try_number)
-		{
-		  warn_user_of_failure(x);
-		  return false;
-		}
+	for (int try_number = 0; !is_connected; ++try_number)
+	  {
+		if (3 == try_number)
+		  {
+			warn_user_of_failure(x);
+			return false;
+		  }
+	  }
 
-	  return true;
-	}
+	return true;
+  }
 
   /*i
 	The warning message is printed to standard output and contains the
 	description what happened from the operating system. */
 
   void warn_user_of_failure(struct do_our_job *x)
-	{
-	  warn("Cannot connect to `%s'", x->database);
-	}
+  {
+	warn("Cannot connect to `%s'", x->database);
+  }
 #+end_src
 
 ----------------------------------------
