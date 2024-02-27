@@ -214,32 +214,29 @@
 Для циклических (рекурсивных) структур применение критерия поиска
 происходит только один раз (используется подход ~memoization~).
 
-В процессе отсеивания данных, сложные и простые данные обрабатываются по-разному.
+В процессе отсеивания данных, сложные и простые данные обрабатываются
+по-разному.  Для простых данных, их строковое представление (в случае
+поиска по регулярному выражению) или их значение (в остальных случаях)
+сравнивается с критерием поиска.
 #+name: Поиск совпадений
 #+begin_src lua :noweb yes :exports none
   local function search_pattern_recursive(obj)
 	 if nil ~= obj then
 		local vis = visited[obj]
 		if nil == vis then
-		   local objtype = type(obj)
-		   if "table" == objtype then
+		   vis = filter(obj)		   
+		   if "table" == type(obj) then
+			  -- не допустить рекурсию
+			  visited[obj] = vis
 				 <<Совпадение составных данных по строке>>
-		   else
-				 <<Совпадение простых данных>>
+				 <<Обычное совпадение составных данных>>
 		   end
+		   visited[obj] = vis
 		end
+		return vis
 	 end
   end
   search_pattern_recursive(obj)
-#+end_src
-Для простых данных, их строковое представление (в случае поиска по
-регулярному выражению) или их значение (в остальных случаях)
-сравнивается с критерием поиска.
-#+name: Совпадение простых данных
-#+begin_src lua :noweb yes :exports none
-  vis = filter(obj)
-  visited[obj] = vis
-  return vis  
 #+end_src
 Если составные данные имеют преобразование в строку (метаметод
 ~__tostring~), то результат этого преобразования также сравнивается с
@@ -247,29 +244,25 @@
 
 #+name: Совпадение составных данных по строке
 #+begin_src lua :noweb yes :exports none
-  local __tostring = (getmetatable(obj) or {}).__tostring
-  if __tostring and filter(__tostring(obj)) then
-	 visited[obj] = true
-  else
-	 <<Обычное совпадение составных данных>>
+  if not vis then
+	 local __tostring = (getmetatable(obj) or EMPTY).__tostring
+	 if __tostring and filter(__tostring(obj)) then
+		vis = true
+	 end
   end
 #+end_src
 
 В остальных случаях отображаются те компоненты составных данных, для
-которых либо ключ, либо значение (рекурсивно) попадают под критерий фильтра.
+которых ключ или значение (рекурсивно) попадают под критерий фильтра.
 
 #+name: Обычное совпадение составных данных
 #+begin_src lua :noweb yes :exports none
-  visited[obj] = false
-  local found = false
   for k, v in pairs(obj) do
-	 if search_pattern_recursive(k) or
+	 local vk, vv =
+		search_pattern_recursive(k),
 		search_pattern_recursive(v)
-	 then
-		found = true
-	 end
+	 if vk or vv then vis = true end
   end
-  visited[obj] = found
 #+end_src
 
 * Вывод на экран

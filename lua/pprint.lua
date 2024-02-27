@@ -42,29 +42,26 @@ end
 		               if nil ~= obj then
 		        	      local vis = visited[obj]
 		        	      if nil == vis then
-		        		 local objtype = type(obj)
-		        		 if "table" == objtype then
-		        			       local __tostring = (getmetatable(obj) or {}).__tostring
-		        			       if __tostring and filter(__tostring(obj)) then
-		        			              visited[obj] = true
-		        			       else
-		        			              visited[obj] = false
-		        			              local found = false
-		        			              for k, v in pairs(obj) do
-		        			                     if search_pattern_recursive(k) or
-		        			              	      search_pattern_recursive(v)
-		        			                     then
-		        			              	      found = true
-		        			                     end
+		        		 vis = filter(obj)		   
+		        		 if "table" == type(obj) then
+		        			-- не допустить рекурсию
+		        			visited[obj] = vis
+		        			       if not vis then
+		        			              local __tostring = (getmetatable(obj) or EMPTY).__tostring
+		        			              if __tostring and filter(__tostring(obj)) then
+		        			       	      vis = true
 		        			              end
-		        			              visited[obj] = found
 		        			       end
-		        		 else
-		        			       vis = filter(obj)
-		        			       visited[obj] = vis
-		        			       return vis  
+		        			       for k, v in pairs(obj) do
+		        			              local vk, vv =
+		        			       	      search_pattern_recursive(k),
+		        			       	      search_pattern_recursive(v)
+		        			              if vk or vv then vis = true end
+		        			       end
 		        		 end
+		        		 visited[obj] = vis
 		        	      end
+		        	      return vis
 		               end
 		        end
 		        search_pattern_recursive(obj)
